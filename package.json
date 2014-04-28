@@ -1,0 +1,48 @@
+{
+  "name": "RealSmartUserMonitoring",
+  "description": "Traditional real user monitoring? Please no! Who cares about the average server response time? We want more, we want smarter data.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/gmetais/RealSmartUserMonitoring",
+  "author": {
+    "name": "Gaël Métais",
+    "email": "gael@gaelmetais.com",
+    "url": "www.gaelmetais.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gaelmetais/RealSmartUserMonitoring.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gaelmetais/RealSmartUserMonitoring/issues"
+  },
+  "licenses": [
+    {
+      "type": "Apache 2.0",
+      "url": "https://github.com/gaelmetais/RealSmartUserMonitoring/blob/master/LICENSE"
+    }
+  ],
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "matchdep": "~0.3.0",
+    "grunt-contrib-jshint": "~0.6.3",
+    "grunt": "~0.4.4",
+    "grunt-contrib-clean": "^0.5.0",
+    "grunt-express": "^1.2.1"
+  },
+  "dependencies": {
+    "express": "3.x",
+    "connect": ">= 1.x",
+    "mongoose": ">= 2.6.x",
+    "connect-mongo": "^0.4.0"
+  },
+  "keywords": [
+    "rum",
+    "performance",
+    "metrics"
+  ]
+}
