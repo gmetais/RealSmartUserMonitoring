@@ -8,6 +8,7 @@ module.exports = function(grunt) {
 
     // Project configuration.
     grunt.initConfig({
+        pkg: grunt.file.readJSON('package.json'),
     
         jshint: {
             all: [
@@ -22,22 +23,42 @@ module.exports = function(grunt) {
             build: ['client/build']
         },
 
+        uglify: {
+            client: {
+                files: {
+                    'client/build/rsum.min.js': ['client/src/rsum.js']
+                }
+            },
+            options: {
+                banner: '/* RealSmartUserMonitoring <%= pkg.version %> http://github.com/gmetais/RealSmartUserMonitoring */\n'
+            }
+        },
+
         express: {
             server: {
                 options: {
-                    server: path.resolve(__dirname, 'server/server.js'),
+                    server: path.resolve(__dirname, 'server.js'),
                     port: 8383,
                     serverreload: true,
                     showStack: true
                 }
             }
+        },
+
+        mocha_phantomjs: {
+            all: ['test/client/*.html']
         }
 
     });
 
     grunt.registerTask('build', [
         'clean',
-        'jshint'
+        'jshint',
+        'uglify'
+    ]);
+
+    grunt.registerTask('test', [
+        'mocha_phantomjs'
     ]);
 
     grunt.registerTask('server', [

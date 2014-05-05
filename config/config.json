@@ -1,0 +1,7 @@
+{
+    "debug": true,
+    "websiteOrigin": "http://localhost",
+    "sessionTimeout": 1,
+    "mongoHost": "localhost",
+    "mongoPort": 27017
+}

@@ -1,11 +1,5 @@
 // TODO : use a settings file
-var settings = {
-    debug: true,
-    websiteOrigin: 'http://localhost', // protocol is needed
-    sessionTimeout: 1, // minutes
-    mongoHost: 'localhost',
-    mongoPort: 27017
-};
+var settings = require('./config/config.json');
 
 var express = require('express');
 var database = require('./lib/database')(settings, express);
@@ -23,13 +17,12 @@ function rawBody(req, res, next) {
         req.on('end', function(){
             try {
                 req.json = JSON.parse(req.rawBody);
-                console.log(req.rawBody);
                 next();
             } catch(e) {
                 if (settings.debug) {
                     console.log('JSON parsing error: ' + req.rawBody);
                 }
-                res.send();
+                res.send(500);
             }
         });
     } else {
@@ -43,10 +36,11 @@ function headersControl(req, res, next) {
     if (req.headers.referer && req.headers.referer.indexOf(settings.websiteOrigin) === 0) {
         
         // Set the right CROSS-DOMAIN headers
-        res.header('Access-Control-Allow-Origin', settings.websiteOrigin);
+        //res.header('Access-Control-Allow-Origin', settings.websiteOrigin);
+        res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Content-Type');
-        res.header('Access-Control-Allow-Credentials', 'true');
+        //res.header('Access-Control-Allow-Credentials', 'true');
 
         // Remove the "x-powered-by: express" header
         res.removeHeader("x-powered-by");
@@ -75,19 +69,15 @@ app.configure(function(){
 });
 
 // Dashboard routes
-var dashboard = require('./dashboard')(app);
+var dashboard = require('./lib/dashboard')(app, database);
 
 // This call is made by every user
 app.post('/rsum/init', function(req, res) {
-    // TODO-MAYBE : force session refresh to avoid it to expire despite activity
-    // http://stackoverflow.com/questions/14464873/expressjs-session-expiring-despite-activity
-
     // Send response ASAP
-    res.send();
+    res.send(200);
 
     if (settings.debug) {
-        console.log('User called init from IP ' + req.ip);
-        console.log(req.json);
+        console.log('User called init');
     }
 
     var data = {};
@@ -100,26 +90,37 @@ app.post('/rsum/init', function(req, res) {
     data.loadEventEnd = req.json.loadEventEnd;
     data.inBackground = req.json.inBackground;
     data.conversion = (req.json.conversion === true);
-
     // Check if it is the user's first visit
-    if (!req.session.sessionStart) {
-        console.log('L\'utilisateur n\'avait pas de session');
-        data.arrivalDate = req.session.sessionStart = new Date();
+    if (!req.session.userId) {
         data.firstPage = true;
+        var userId = Date.now() + '' + Math.round(Math.random()*10000);
+        database.insertNewVisit(userId, data);
+        
+        // Update session
+        req.session.userId = userId;
         req.session.save();
+
+        if (settings.debug) {
+            console.log('First page');
+        }
+    } else {
+        database.updateVisit(req.session.userId, data.loadEventEnd, data.conversion);
+
+        if (settings.debug) {
+            console.log('Another page');
+        }
     }
 
-    // Save in DB
     database.insertPageViewData(data);
 });
 
 // This call is made if the page was loaded in background and is back in foreground
 app.post('/rsum/foreground', function(req, res) {
     // Send response ASAP
-    res.send();
+    res.send(200);
 
     if (settings.debug) {
-        console.log('User called foreground from IP ' + req.ip);
+        console.log('User called foreground');
     }
 
     // Save in DB
@@ -129,16 +130,17 @@ app.post('/rsum/foreground', function(req, res) {
 // This call is made if there is an asynchronsous conversion event made by the user on the page
 app.post('/rsum/conversion', function(req, res) {
     // Send response ASAP
-    res.send();
+    res.send(200);
 
     if (settings.debug) {
-        console.log('User called conversion from IP ' + req.ip);
-        console.log(req.json);
-        console.log(req.json.pageId);
+        console.log('User called conversion');
     }
 
-    // Save in DB
-    database.updateConversion(req.json.pageId);
+    console.log(req.session);
+    if (req.session.userId) {
+        // Save in DB
+        database.updateConversion(req.session.userId, req.json.pageId);
+    }
 });
 
 // For grunt-express

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Background loading tests</title>
+    <link rel="stylesheet" media="all" href="../vendor/mocha.css">
+</head>
+<body>
+    <div id="mocha"><p><a href=".">Index</a><div style="color:red;">This test must be launched in a background tab!</div></p></div>
+    <div id="messages"></div>
+    <div id="fixtures"></div>
+
+    <script src="../vendor/mocha.js"></script>
+    <script src="../vendor/chai.js"></script>
+    <script src="../vendor/sinon-1.9.1.js"></script>
+
+    <script>
+        // First of all, let's empty the Local Storage
+        localStorage.removeItem('rsum');
+    </script>
+    <script src="../../client/src/rsum.js" data-rsum-host="foo"></script>
+
+
+    <script>mocha.setup('bdd')</script>
+    
+    <script>
+        var expect = chai.expect;
+     
+        describe("Background loading", function() {
+
+            var sandbox,
+                xhr,
+                requests;
+       
+            before(function() {
+                xhr = sinon.useFakeXMLHttpRequest();
+                requests = [];
+
+                xhr.onCreate = function (xhr) {
+                    requests.push(xhr);
+                };
+            });
+
+            beforeEach(function() {
+                // create a sandbox
+                sandbox = sinon.sandbox.create();
+             
+                // stub some console methods
+                sandbox.stub(window.console, "error");
+            });
+          
+            after(function() {
+                xhr.restore();
+            });
+
+            afterEach(function() {
+                // restore the environment as it was before
+                sandbox.restore();
+            });
+
+            describe("The page initializes in background", function() {
+                var storage = localStorage.getItem('rsum');
+                var storageData,
+                    state;
+                
+                it("should have an rsum entry in localStorage", function() {
+                    expect(storage).not.to.be.null;
+                });
+
+                it("the localStorage value should be the same as the getState() response", function() {
+                    storageData = JSON.parse(storage);
+                    state = RSUM.getState();
+                    expect(storageData).to.deep.equal(state);
+                });
+
+                it("should have the inBackgroundOnInit flag", function() {
+                    expect(storageData.pages[0]).to.have.a.property('inBackgroundOnInit').that.equals(1);
+                });
+
+                it("should not have the inBackgroundOnLoad flag yet", function() {
+                    expect(storageData.pages[0]).to.not.have.a.property('inBackgroundOnLoad');
+                });
+            });
+
+            describe("The navigation timings are available", function() {
+                var storageData = null;
+                var state = "something";
+
+                // Wait a little so we are sure the timings are available
+                before(function(done) {
+                    setTimeout(function() {
+                        storageData = JSON.parse(localStorage.getItem('rsum'));
+                        done();
+                    }, 500);
+                });
+
+                it("the localStorage value should be the same as the getState() response", function() {
+                    console.log("Checking state");
+                    console.log(storageData.pages[0]);
+                    console.log(RSUM.getState().pages[0]);
+                    expect(storageData).to.deep.equal(RSUM.getState());
+                });
+
+                it("should have the inBackgroundOnInit flag", function() {
+                    expect(storageData.pages[0]).to.have.a.property('inBackgroundOnInit').that.equals(1);
+                });
+
+                it("should have the inBackgroundOnLoad flag", function() {
+                    expect(storageData.pages[0]).to.have.a.property('inBackgroundOnLoad').that.equals(1);
+                });
+            });
+
+            describe("A request should be sent", function() {
+                it("should see 1 XMLHttpRequest", function() {
+                    expect(requests).to.have.length(1);
+                });
+            });
+
+            describe("Going in foreground", function() {
+                this.timeout(999999999);
+
+                before(function(done) {
+                    // Wait until the tester moves the tab in foreground
+                    var eventNames = ['visibilitychange', 'webkitvisibilitychange'];
+                    eventNames.forEach(function(name) {
+                        document.addEventListener(name, function() {
+                            if (!document.hidden || !document.webkitHidden) {
+                                // And wait a little more
+                                setTimeout(function() {
+                                    done();
+                                }, 200);
+                            }
+                        });
+                    });
+                });
+
+                it("an second XMLHttpRequest should be sent", function() {
+                    expect(requests).to.have.length(2);
+                });
+            });
+        });
+    </script>
+
+    <script>
+        mocha.run();
+    </script>
+</body>
+</html>

@@ -1,124 +1,111 @@
+/* 
+ * 
+ * REAL SMART USER MONITORING
+ * https://github.com/gmetais/RealSmartUserMonitoring
+ * 
+ * Copyright 2014 Gaël Métais
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ */
+
 (function(global, doc, undefined) {
     'use strict';
-    
-    // Default settings
-    var settings = {
-        serverHost : '/rsum',
-        sample : 1,
-        conversion : false
-    };
 
-    var uniquePageId = Date.now() + '' + Math.round(Math.random()*10000);
-    var isConversion = false;
-    var dataSent = false;
-    var rawLocalStorage = global.localStorage.getItem('RSUM');
-    var localData = (rawLocalStorage === null) ? {} : JSON.parse(rawLocalStorage);
-
-    if (isUserWanted()) {
-        waitForDocumentReady();
+    // Grab the settings
+    var settings = {};
+    var defaultHost = '/rsum';
+    var script = doc.querySelector('script[data-rsum-host],script[data-rsum-sample],script[data-rsum-conversion]');
+    if (script !== null) {
+        settings.host = script.getAttribute('data-rsum-host') || defaultHost;
+        settings.sample = +script.getAttribute('data-rsum-sample') || 1;
+        settings.conversion = (script.getAttribute('data-rsum-conversion') === 'true');
+    } else if (global.RSUM_SETTINGS) {
+        settings.host = global.RSUM_SETTINGS.host || defaultHost;
+        settings.sample = +global.RSUM_SETTINGS.sample || 1;
+        settings.conversion = global.RSUM_SETTINGS.conversion;
     }
 
-    function init() {
 
-        var data = {};
+    // Init state
+    var state = JSON.parse(global.localStorage.getItem('rsum') || '{}');
 
-        // If it is a conversion
-        if (settings.conversion || isConversion) {
-            data.conversion = true;
-        }
+    // Delete old sessions
+    if (state.expireDate !== undefined && state.expireDate < Date.now()) {
+        state = {};
+    }
 
-        // If it is a background tab
-        data.inBackground = isTabHidden();
-        if (data.inBackground) {
-            waitForTabVisibility(sendForeground);
-        }
+    // Create session
+    if (state.expireDate === undefined) {
+        state.sessionId = generateRandomId();
+    }
 
-        // Get navigation timings
-        var timings = global.performance.timing;
-        data.responseStart = timings.responseStart - timings.fetchStart;
-        data.responseEnd = timings.responseEnd - timings.fetchStart;
-        data.domInteractive = timings.domInteractive - timings.fetchStart;
-        data.loadEventEnd = timings.loadEventEnd - timings.fetchStart;
+    // Check if user is needed
+    if (!isUserWanted()) {
+        return saveState();
+    }
 
-        // Page id
-        data.pageId = uniquePageId;
+    // Check if it is a conversion
+    if (settings.conversion) {
+        state.conversion = 1;
+    }
 
-        sendData(data);
+    // Create page
+    state.pages = state.pages || [];
+    var page = {
+        pageId : generateRandomId(),
+        date : Date.now(),
+        firstPage : (state.pages.length === 0)
+    };
 
-        // Save page visit in local storage
-        global.localStorage.setItem('RSUM', JSON.stringify(localData));
+    // Check if page is in background
+    if (isTabHidden()) {
+        page.inBackgroundOnInit = 1;
+    }
+
+    state.pages.push(page);
+
+    saveState();
+    waitForDocumentReady();
+
+
+
+    function generateRandomId() {
+        return Date.now() + '' + Math.round(Math.random()*10000);
     }
 
     // Check if the user should be part of the sample rate
     function isUserWanted() {
         // Filter by sample rate
         if (settings.sample < 1) {
-            if (localData.inSample !== undefined) {
-                return localData.inSample;
+            if (state.inSample !== undefined) {
+                return state.inSample;
             } else {
                 // User never came, let's roll the dice
                 var wanted = Math.random() < settings.sample;
-                localData.inSample = wanted;
+                state.inSample = wanted;
                 return wanted;
             }
         }
         return true;
     }
 
-    function sendData(data) {
-        postToServer('/init', data);
-        dataSent = true;
-    }
-
-    function sendForeground() {
-        var now = new Date().getTime();
-        var data = {
-            pageId: uniquePageId,
-            timeInBackground: now - global.performance.timing.fetchStart
-        };
-        postToServer('/foreground', data);
-    }
-
-    function sendConversion() {
-        var data = {
-            pageId: uniquePageId
-        };
-        postToServer('/conversion', data);
-    }
-
-    function postToServer(route, data) {
-        var xhr = new global.XMLHttpRequest();
-        xhr.open('POST', settings.serverHost + route, true);
-        xhr.withCredentials = true;
-        xhr.setRequestHeader('Content-type', 'text/plain');
-        xhr.send(JSON.stringify(data));
-    }
-
-    // This function uses the HTML5 Visibility API
-    // https://developer.mozilla.org/en-US/docs/Web/Guide/User_experience/Using_the_Page_Visibility_API
-    function isTabHidden() {
-        return !!(doc.hidden || doc.msHidden || doc.webkitHidden || doc.mozHidden);
-    }
-
-    function waitForTabVisibility(callback) {
-        var eventNames = ['visibilitychange', 'mozvisibilitychange', 'msvisibilitychange', 'webkitvisibilitychange'];
-        function checkVisibility() {
-            if (!isTabHidden()) {
-                callback();
-                eventNames.forEach(function(name) {
-                    doc.removeEventListener(name, checkVisibility);
-                });
-            }
-        }
-        eventNames.forEach(function(name) {
-            doc.addEventListener(name, checkVisibility);
-        });
-    }
-
+    // Attach an event on document ready
     function waitForDocumentReady() {
         function checkIfDocumentIsComplete() {
             if (doc.readyState === 'complete') {
-                setTimeout(init, 1000);
+                // Wait another 1ms to be just after the other scripts on the page
+                setTimeout(readTimings, 2);
                 return true;
             }
             return false;
@@ -129,38 +116,86 @@
         }
     }
 
+    // Read Navigation API timings and store them
+    function readTimings() {
+        var timings = global.performance.timing;
+
+        page.responseStart = timings.responseStart - timings.fetchStart;
+        page.responseEnd = timings.responseEnd - timings.fetchStart;
+        page.domInteractive = timings.domInteractive - timings.fetchStart;
+        page.loadEventEnd = timings.loadEventEnd - timings.fetchStart;
+
+        // If it is in background
+        if (isTabHidden()) {
+            page.inBackgroundOnLoad = 1;
+            waitForTabVisibility();
+        }
+
+        saveState();
+        sendData();
+    }
+
+
+    function sendData() {
+        var xhr = new global.XMLHttpRequest();
+        xhr.open('POST', settings.host + '/saveState', true);
+        xhr.setRequestHeader('Content-type', 'text/plain');
+        xhr.send(JSON.stringify(state));
+    }
+
+    // This function uses the HTML5 Visibility API
+    // https://developer.mozilla.org/en-US/docs/Web/Guide/User_experience/Using_the_Page_Visibility_API
+    function isTabHidden() {
+        return !!(doc.hidden || doc.webkitHidden);
+    }
+
+    function waitForTabVisibility() {
+        var eventNames = ['visibilitychange', 'webkitvisibilitychange'];
+        function checkVisibility() {
+            if (!isTabHidden()) {
+                backInForeground();
+                eventNames.forEach(function(name) {
+                    doc.removeEventListener(name, checkVisibility);
+                });
+            }
+        }
+        eventNames.forEach(function(name) {
+            doc.addEventListener(name, checkVisibility);
+        });
+    }
+
+    function backInForeground() {
+        page.timeInBackground = Date.now() - global.performance.timing.fetchStart;
+        console.log("Setting timeInBackground");
+        saveState();
+        sendData();
+        console.log(state);
+    }
+
+    function saveState() {
+        global.localStorage.setItem('rsum', JSON.stringify(state));
+    }
+
+    
     // Public object declaration
     global.RSUM = {
-        
-        // You can set options for the metrics to be sent the way you want
-        // options.host (required) = The RSUM server root (ex: "http://mydomain.com:8383/rsum")
-        // options.sample (optional) = The fraction of clients who should actually send data (0 > sample >= 1)
-        // options.conversion (optional) = Should this page be counted as a conversion page ?
-        setOptions : function setOptions(options) {
-            if (dataSent) {
-                console.error('RSUM Error: setOptions called too late, data already sent');
-                return;
-            }
 
-            settings = {
-                serverHost : options.host || settings.serverHost,
-                sample : options.sample || settings.sample,
-                conversion : options.conversion || settings.conversion
-            };
+        // Best way to send a conversion is in setOptions(), but you might need to dynamically send a conversion event
+        conversion : function conversion() {
+            if (state.conversion === undefined) {
+                state.conversion = 1;
+                saveState();
+                sendData();
+            } else {
+                console.error('RSUM conversion already sent');
+            }
         },
 
-        // You might want to dynamically send a conversion event
-        conversion : function conversion() {
-            if (!isConversion) {
-                isConversion = true;
-                if (dataSent) {
-                    sendConversion();
-                    return;
-                }
-            } else {
-                console.log('RSUM Warning: conversion already sent');
-            }
+        // You might want to access the current page's state, you little hacker.
+        // I use it for testing purpose.
+        getState : function getState() {
+            return state;
         }
     };
 
-}(window, window.document));
+}(this, this.document));
