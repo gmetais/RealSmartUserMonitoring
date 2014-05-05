@@ -5,13 +5,16 @@ Traditional real user monitoring? Please no!
 Who cares about the average server response time? We want more, we want smarter data.
 
 **DO NOT USE YET. Work in progress**
+
 More details soon...
 
 ## Client installation
 
 There are two ways to configure RSUM. You cannot mix these two technics.
 
-### Add HTML parameters to the script's tag
+### Method 1
+
+Add HTML parameters to the script's tag
 
 ```html
 <script src="rsum.min.js" 
@@ -22,7 +25,9 @@ There are two ways to configure RSUM. You cannot mix these two technics.
 ```
 All three parameters are optional.
 
-### Set the global variable `RSUM_SETTINGS` **before** the script is loaded and executed.
+### Method 2
+
+Set the global variable `RSUM_SETTINGS` **before** the script is loaded and executed.
 
 ```html
 <script>
@@ -36,15 +41,17 @@ All three parameters are optional.
 <script src="rsum.min.js"></script>
 ```
 
-### host (optional)
+### Settings details
+
+#### host (optional)
 
 The RSUM server root (ex: "http://mydomain.com:8383/rsum").
 
-### sample (optional)
+#### sample (optional)
 
 The fraction of clients who should actually send data (0 > sample >= 1).
 
-### conversion (optional)
+#### conversion (optional)
 
 Set this option to `true` only if you want the page to be a conversion page.
 If you want to send the conversion event yourself in javascript, you can call the `RSUM.conversion()` function at any time after the page is loaded.
@@ -54,23 +61,25 @@ If you want to send the conversion event yourself in javascript, you can call th
 
 The server will read the /config/config.json file on startup. Edit this file to change the default config.
 
-### debug
+### Settings details
+
+#### debug
 
 Enables debug mode
 
-### websiteOrigin
+#### websiteOrigin
 
 Root URL of the website that will call RSUM. It must include the protocol (`http://` or `https://` but won't work with both for the moment).
 
-### sessionTimeout
+#### sessionTimeout
 
 Duration of a user session (in minutes). After that time, a user coming back will be counted as a new user.
 
-### mongoHost
+#### mongoHost
 
 Host of the MongoDB. Use `localhost` if it is on the same machine.
 
-### mongoPort
+#### mongoPort
 
 Port of the MongoDB.
 
