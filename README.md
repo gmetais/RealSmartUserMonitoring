@@ -4,7 +4,7 @@ Real Smart User Monitoring
 Traditional real user monitoring? Please no!
 Who cares about the average server response time? We want more, we want smarter data.
 
-
+**DO NOT USE YET. Work in progress**
 More details soon...
 
 ## Client installation
@@ -78,7 +78,6 @@ Port of the MongoDB.
 ## TODO
  
  * Avoid browser compatibility errors and write a chapter in README about compatibility
- * Change CORS to allow calls from both HTTP and HTTPS webpages
  * Ignore search engines bots
  * Measure time in background ratio
 
