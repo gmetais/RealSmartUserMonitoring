@@ -47,15 +47,15 @@ Set the global variable `RSUM_SETTINGS` **before** the script is loaded and exec
 
 #### host (optional)
 
-The RSUM server root (ex: "http://mydomain.com:8383/rsum"). Default value is "/rsum".
+The RSUM server root (ex: "http://mydomain.com:8383/rsum"). Default value is `/rsum`.
 
 #### session timeout (optional)
 
-The duration of a session in minutes. Default value is 120 minutes.
+The duration of a session in minutes. Default value is `120` minutes.
 
 #### sample (optional)
 
-The fraction of clients who should actually send data (0 > sample >= 1). Default value is 1.
+The fraction of clients who should actually send data (0 > sample >= 1). Default value is 1`.
 
 #### conversion (optional)
 
@@ -65,9 +65,22 @@ If you want to send the conversion event yourself in javascript, you can call th
 
 ## Server installation
 
-The server will read the /config/config.json file on startup. Edit this file to change the default config.
+### 1 - Install Elasticsearch
 
-### Settings details
+You will need an elasticsearch instance. It can be hosted on the same machine as the server.
+Don't worry, it's pretty easy to install, just follow [this guide](http://www.elasticsearch.org/overview/elasticsearch#installation).
+
+
+### 2 - Install the RSUM package with npm
+
+```shell
+npm install rsum -g
+```
+
+
+### 3 - Edit the config file
+
+The server will read the `/config/config.json` file on startup. Edit this file to change the default config.
 
 #### debug
 
@@ -81,13 +94,12 @@ Root URL of the website that will call RSUM. It must include the protocol (`http
 
 Duration of a user session (in minutes). After that time, a user coming back will be counted as a new user.
 
-#### mongoHost
+#### elasticsearchHost
 
-Host of the MongoDB. Use `localhost` if it is on the same machine.
+Elasticsearch REST API path. If you installed it on the same machine with the default port, use `http://localhost:9200`.
 
-#### mongoPort
 
-Port of the MongoDB.
+### 4 - 
 
 
 ## TODO
