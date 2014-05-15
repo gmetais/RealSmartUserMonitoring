@@ -91,6 +91,10 @@
                     expect(storageData).to.have.a.property('sessionId').that.is.a('string');
                 });
 
+                it("should have a expire date", function() {
+                    expect(storageData).to.have.a.property('expireDate').that.is.a('number');
+                });
+
                 it("should have a list of pages", function() {
                     expect(storageData).to.have.a.property('pages').that.is.an('array');
                 });
@@ -101,10 +105,6 @@
 
                 it("should have a page id", function() {
                     expect(storageData.pages[0]).to.have.a.property('pageId').that.is.a('string');
-                });
-
-                it("should have a timestamp", function() {
-                    expect(storageData.pages[0]).to.have.a.property('date').that.is.a('number');
                 });
 
                 it("should have a firstPage flag", function() {

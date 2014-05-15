@@ -2,7 +2,7 @@
 var settings = require('./config/config.json');
 
 var express = require('express');
-var database = require('./lib/database')(settings, express);
+var database = require('./lib/database')(settings);
 var app = express();
 
 
@@ -55,93 +55,14 @@ app.configure(function(){
     app.set('port', process.env.PORT || 8383);
     app.use(rawBody);
     app.use(headersControl);
-    app.use(express.methodOverride());
-    app.use(express.cookieParser());
-    app.use(express.session({
-        store: database.getSessionStore(),
-        key: 'rsumId',
-        secret: 'not-so-secret',
-        cookie: {
-            maxAge: settings.sessionTimeout * 60 * 1000
-        }
-    }));
     app.use(app.router);
 });
 
-// Dashboard routes
-var dashboard = require('./lib/dashboard')(app, database);
+// Receiver routes definition
+var receiver = require('./lib/receiver')(app, settings, database);
 
-// This call is made by every user
-app.post('/rsum/init', function(req, res) {
-    // Send response ASAP
-    res.send(200);
+// Dashboard routes definition
+var dashboard = require('./lib/dashboard')(app, settings, database);
 
-    if (settings.debug) {
-        console.log('User called init');
-    }
-
-    var data = {};
-
-    // Read informations from browser
-    data.pageId = req.json.pageId;
-    data.responseStart = req.json.responseStart;
-    data.responseEnd = req.json.responseEnd;
-    data.domInteractive = req.json.domInteractive;
-    data.loadEventEnd = req.json.loadEventEnd;
-    data.inBackground = req.json.inBackground;
-    data.conversion = (req.json.conversion === true);
-    // Check if it is the user's first visit
-    if (!req.session.userId) {
-        data.firstPage = true;
-        var userId = Date.now() + '' + Math.round(Math.random()*10000);
-        database.insertNewVisit(userId, data);
-        
-        // Update session
-        req.session.userId = userId;
-        req.session.save();
-
-        if (settings.debug) {
-            console.log('First page');
-        }
-    } else {
-        database.updateVisit(req.session.userId, data.loadEventEnd, data.conversion);
-
-        if (settings.debug) {
-            console.log('Another page');
-        }
-    }
-
-    database.insertPageViewData(data);
-});
-
-// This call is made if the page was loaded in background and is back in foreground
-app.post('/rsum/foreground', function(req, res) {
-    // Send response ASAP
-    res.send(200);
-
-    if (settings.debug) {
-        console.log('User called foreground');
-    }
-
-    // Save in DB
-    database.updateForeground(req.json.pageId, req.json.timeInBackground);
-});
-
-// This call is made if there is an asynchronsous conversion event made by the user on the page
-app.post('/rsum/conversion', function(req, res) {
-    // Send response ASAP
-    res.send(200);
-
-    if (settings.debug) {
-        console.log('User called conversion');
-    }
-
-    console.log(req.session);
-    if (req.session.userId) {
-        // Save in DB
-        database.updateConversion(req.session.userId, req.json.pageId);
-    }
-});
-
-// For grunt-express
+// Used by grunt-express
 module.exports = app;

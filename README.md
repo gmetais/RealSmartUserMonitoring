@@ -10,7 +10,7 @@ More details soon...
 
 ## Client installation
 
-There are two ways to configure RSUM. You cannot mix these two technics.
+There are two ways to configure RSUM. You cannot mix these two methods.
 
 ### Method 1
 
@@ -19,6 +19,7 @@ Add HTML parameters to the script's tag
 ```html
 <script src="rsum.min.js" 
     data-rsum-host="http://mydomain.com:8383/rsum"
+    data-rsum-session-timeout="120"
     data-rsum-sample="0.2"
     data-rsum-conversion="true"
 ></script>
@@ -33,6 +34,7 @@ Set the global variable `RSUM_SETTINGS` **before** the script is loaded and exec
 <script>
     window.RSUM_SETTINGS = {
         host: 'http://mydomain.com:8383/rsum',
+        sessionTimeout: 120,
         sample: 0.2,
         conversion: true
     }
@@ -45,15 +47,19 @@ Set the global variable `RSUM_SETTINGS` **before** the script is loaded and exec
 
 #### host (optional)
 
-The RSUM server root (ex: "http://mydomain.com:8383/rsum").
+The RSUM server root (ex: "http://mydomain.com:8383/rsum"). Default value is "/rsum".
+
+#### session timeout (optional)
+
+The duration of a session in minutes. Default value is 120 minutes.
 
 #### sample (optional)
 
-The fraction of clients who should actually send data (0 > sample >= 1).
+The fraction of clients who should actually send data (0 > sample >= 1). Default value is 1.
 
 #### conversion (optional)
 
-Set this option to `true` only if you want the page to be a conversion page.
+Set this option to `true` only if you want the page to be a conversion page. Default value is false.
 If you want to send the conversion event yourself in javascript, you can call the `RSUM.conversion()` function at any time after the page is loaded.
 
 

@@ -25,15 +25,18 @@
     // Grab the settings
     var settings = {};
     var defaultHost = '/rsum';
-    var script = doc.querySelector('script[data-rsum-host],script[data-rsum-sample],script[data-rsum-conversion]');
+    var defaultSessionTimeout = 120;
+    var script = doc.querySelector('script[data-rsum-host],script[data-rsum-sample],script[data-rsum-conversion],script[data-rsum-session-timeout]');
     if (script !== null) {
         settings.host = script.getAttribute('data-rsum-host') || defaultHost;
         settings.sample = +script.getAttribute('data-rsum-sample') || 1;
         settings.conversion = (script.getAttribute('data-rsum-conversion') === 'true');
+        settings.sessionTimeout = +script.getAttribute('data-rsum-session-timeout') || defaultSessionTimeout;
     } else if (global.RSUM_SETTINGS) {
         settings.host = global.RSUM_SETTINGS.host || defaultHost;
         settings.sample = +global.RSUM_SETTINGS.sample || 1;
         settings.conversion = global.RSUM_SETTINGS.conversion;
+        settings.sessionTimeout = +global.RSUM_SETTINGS.sessionTimeout || defaultSessionTimeout;
     }
 
 
@@ -47,6 +50,7 @@
 
     // Create session
     if (state.expireDate === undefined) {
+        state.expireDate = Date.now() + (settings.sessionTimeout * 60 * 1000);
         state.sessionId = generateRandomId();
     }
 
@@ -61,11 +65,9 @@
     }
 
     // Create page
-    state.pages = state.pages || [];
+    
     var page = {
-        pageId : generateRandomId(),
-        date : Date.now(),
-        firstPage : (state.pages.length === 0)
+        pageId : generateRandomId()
     };
 
     // Check if page is in background
@@ -73,7 +75,14 @@
         page.inBackgroundOnInit = 1;
     }
 
-    state.pages.push(page);
+    // Check if it's the first page
+    if (state.firstPage === undefined) {
+        state.firstPage = [];
+        state.firstPage.push(page);
+    } else {
+        state.otherPages = state.otherPages || [];
+        state.otherPages.push(page);
+    }
 
     saveState();
     waitForDocumentReady();
@@ -81,7 +90,7 @@
 
 
     function generateRandomId() {
-        return Date.now() + '' + Math.round(Math.random()*10000);
+        return (Date.now()*1000 + Math.round(Math.random()*1000)).toString(36);
     }
 
     // Check if the user should be part of the sample rate
@@ -166,10 +175,8 @@
 
     function backInForeground() {
         page.timeInBackground = Date.now() - global.performance.timing.fetchStart;
-        console.log("Setting timeInBackground");
         saveState();
         sendData();
-        console.log(state);
     }
 
     function saveState() {

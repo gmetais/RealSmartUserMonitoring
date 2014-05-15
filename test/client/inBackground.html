@@ -89,15 +89,12 @@
                 // Wait a little so we are sure the timings are available
                 before(function(done) {
                     setTimeout(function() {
-                        storageData = JSON.parse(localStorage.getItem('rsum'));
                         done();
                     }, 500);
                 });
 
                 it("the localStorage value should be the same as the getState() response", function() {
-                    console.log("Checking state");
-                    console.log(storageData.pages[0]);
-                    console.log(RSUM.getState().pages[0]);
+                    storageData = JSON.parse(localStorage.getItem('rsum'));
                     expect(storageData).to.deep.equal(RSUM.getState());
                 });
 
@@ -110,16 +107,14 @@
                 });
             });
 
-            describe("A request should be sent", function() {
-                it("should see 1 XMLHttpRequest", function() {
-                    expect(requests).to.have.length(1);
-                });
-            });
-
             describe("Going in foreground", function() {
                 this.timeout(999999999);
 
                 before(function(done) {
+                    if (!document.hidden || !document.webkitHidden) {
+                        done();
+                        return;
+                    }
                     // Wait until the tester moves the tab in foreground
                     var eventNames = ['visibilitychange', 'webkitvisibilitychange'];
                     eventNames.forEach(function(name) {
@@ -134,7 +129,7 @@
                     });
                 });
 
-                it("an second XMLHttpRequest should be sent", function() {
+                it("a second XMLHttpRequest should be sent", function() {
                     expect(requests).to.have.length(2);
                 });
             });

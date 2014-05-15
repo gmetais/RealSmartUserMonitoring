@@ -1,7 +1,5 @@
 {
     "debug": true,
     "websiteOrigin": "http://localhost",
-    "sessionTimeout": 1,
-    "mongoHost": "localhost",
-    "mongoPort": 27017
+    "elasticsearchHost": "http://localhost:9200"
 }
