@@ -64,5 +64,8 @@ var receiver = require('./lib/receiver')(app, settings, database);
 // Dashboard routes definition
 var dashboard = require('./lib/dashboard')(app, settings, database);
 
+// Give access to Dashboard assets
+app.use('/public', express.static(__dirname + '/public'));
+
 // Used by grunt-express
 module.exports = app;

@@ -74,11 +74,11 @@
                 });
 
                 it("should have the inBackgroundOnInit flag", function() {
-                    expect(storageData.pages[0]).to.have.a.property('inBackgroundOnInit').that.equals(1);
+                    expect(storageData.firstPage).to.have.a.property('inBackgroundOnInit').that.equals(1);
                 });
 
                 it("should not have the inBackgroundOnLoad flag yet", function() {
-                    expect(storageData.pages[0]).to.not.have.a.property('inBackgroundOnLoad');
+                    expect(storageData.firstPage).to.not.have.a.property('inBackgroundOnLoad');
                 });
             });
 
@@ -99,11 +99,11 @@
                 });
 
                 it("should have the inBackgroundOnInit flag", function() {
-                    expect(storageData.pages[0]).to.have.a.property('inBackgroundOnInit').that.equals(1);
+                    expect(storageData.firstPage).to.have.a.property('inBackgroundOnInit').that.equals(1);
                 });
 
                 it("should have the inBackgroundOnLoad flag", function() {
-                    expect(storageData.pages[0]).to.have.a.property('inBackgroundOnLoad').that.equals(1);
+                    expect(storageData.firstPage).to.have.a.property('inBackgroundOnLoad').that.equals(1);
                 });
             });
 

@@ -39,6 +39,8 @@
         settings.sessionTimeout = +global.RSUM_SETTINGS.sessionTimeout || defaultSessionTimeout;
     }
 
+    // Metrics needed from the Navigation Timing API
+    var navigationMetrics = ['responseStart', 'responseEnd', 'domInteractive', 'loadEventEnd'];
 
     // Init state
     var state = JSON.parse(global.localStorage.getItem('rsum') || '{}');
@@ -65,7 +67,6 @@
     }
 
     // Create page
-    
     var page = {
         pageId : generateRandomId()
     };
@@ -77,8 +78,7 @@
 
     // Check if it's the first page
     if (state.firstPage === undefined) {
-        state.firstPage = [];
-        state.firstPage.push(page);
+        state.firstPage = page;
     } else {
         state.otherPages = state.otherPages || [];
         state.otherPages.push(page);
@@ -129,10 +129,9 @@
     function readTimings() {
         var timings = global.performance.timing;
 
-        page.responseStart = timings.responseStart - timings.fetchStart;
-        page.responseEnd = timings.responseEnd - timings.fetchStart;
-        page.domInteractive = timings.domInteractive - timings.fetchStart;
-        page.loadEventEnd = timings.loadEventEnd - timings.fetchStart;
+        navigationMetrics.forEach(function(metricName) {
+            page[metricName] = timings[metricName] - timings.fetchStart;
+        });
 
         // If it is in background
         if (isTabHidden()) {
@@ -140,10 +139,38 @@
             waitForTabVisibility();
         }
 
+        calculateAverages();
         saveState();
         sendData();
     }
 
+    // Consolidate the load times of every pages
+    function calculateAverages() {
+        var averages = {};
+
+        navigationMetrics.forEach(function(metricName) {
+            var sum = 0, number = 0;
+
+            if (state.firstPage[metricName] !== undefined) {
+                sum += state.firstPage[metricName];
+                number ++;
+            }
+            
+            if (state.otherPages !== undefined) {
+                state.otherPages.forEach(function(onePage) {
+                    if (onePage[metricName] !== undefined) {
+                        sum += onePage[metricName];
+                        number ++;
+                    }
+                });
+            }
+
+            averages[metricName] = Math.round(sum / number);
+            averages.number = number;
+        });
+
+        state.averages = averages;
+    }
 
     function sendData() {
         var xhr = new global.XMLHttpRequest();

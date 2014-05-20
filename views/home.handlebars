@@ -1,21 +1,28 @@
 <div class="header">
     <h1>REAL SMART USER MONITORING</h1>
-    <div>Visits: {{nbVisits}}</div>
-    <div>Pageviews: {{nbPages}}</div>
-    <div>Pages per visit: {{pagesPerVisit}}</div>
-    <div>Bounce rate: {{bounceRate}}%</div>
-    <div>First Page Load Time: {{avgFirstPageLoadTime}}ms</div>
-    <div>Page Load Time: {{avgPageLoadTime}}ms</div>
-    
+    <div>Visits: {{generalMetrics.nbVisits}}</div>
+    <div>Pageviews: {{generalMetrics.nbPages}}</div>
+    <div>Pages per visit: {{generalMetrics.pagesPerVisit}}</div>
+    <div>Bounce rate: {{generalMetrics.bounceRate}}%</div>
+    <div>First Page Load Time: {{generalMetrics.avgFirstPageLoadTime}}ms</div>
+    <div>Page Load Time: {{generalMetrics.avgPageLoadTime}}ms</div>
 </div>
 <div class="content">
     <div class="tabs">
 
     </div>
     <div class="middle">
-        
+        <div class="smallChart">
+            <div id="firstPageLoadTimeChart"></div>
+        </div>
+        <div class="smallChart">
+            <div id="loadTimeChart"></div>
+        </div>
     </div>
 </div>
 <div class="footer">
 
 </div>
+<script>
+    var graphValues = {{{repartition}}};
+</script>

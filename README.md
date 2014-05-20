@@ -104,6 +104,7 @@ Elasticsearch REST API path. If you installed it on the same machine with the de
 
 ## TODO
  
+ * Create a "UX score" for each user, by calculating the frustration on each page he visits and making the sum of frustration
  * Avoid browser compatibility errors and write a chapter in README about compatibility
  * Ignore search engines bots
  * Measure time in background ratio
