@@ -1,0 +1,19 @@
+body {
+    font-family: "Century Gothic", helvetica, arial, sans-serif;
+    margin: 10px;
+    background: #f2f2f2;
+}
+
+h1 {
+    font-weight: normal;
+    font-style: italic;
+}
+
+.grid > div {
+    padding-top: 20px;
+}
+
+.grid > div > div {
+    background: #FFF;
+    height: 250px;
+}

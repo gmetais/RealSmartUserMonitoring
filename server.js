@@ -36,11 +36,9 @@ function headersControl(req, res, next) {
     if (req.headers.referer && req.headers.referer.indexOf(settings.websiteOrigin) === 0) {
         
         // Set the right CROSS-DOMAIN headers
-        //res.header('Access-Control-Allow-Origin', settings.websiteOrigin);
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Content-Type');
-        //res.header('Access-Control-Allow-Credentials', 'true');
 
         // Remove the "x-powered-by: express" header
         res.removeHeader("x-powered-by");

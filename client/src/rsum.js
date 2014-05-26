@@ -147,13 +147,15 @@
     // Consolidate the load times of every pages
     function calculateAverages() {
         var averages = {};
+        var maximums = {};
 
         navigationMetrics.forEach(function(metricName) {
-            var sum = 0, number = 0;
+            var sum = 0, number = 0, max = 0;
 
             if (state.firstPage[metricName] !== undefined) {
                 sum += state.firstPage[metricName];
                 number ++;
+                max = state.firstPage[metricName];
             }
             
             if (state.otherPages !== undefined) {
@@ -161,15 +163,18 @@
                     if (onePage[metricName] !== undefined) {
                         sum += onePage[metricName];
                         number ++;
+                        max = Math.max(max, onePage[metricName]);
                     }
                 });
             }
 
             averages[metricName] = Math.round(sum / number);
             averages.number = number;
+            maximums[metricName] = max;
         });
 
         state.averages = averages;
+        state.maximums = maximums;
     }
 
     function sendData() {

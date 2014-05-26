@@ -24,6 +24,7 @@ Add HTML parameters to the script's tag
     data-rsum-conversion="true"
 ></script>
 ```
+
 All three parameters are optional.
 
 ### Method 2
@@ -99,7 +100,9 @@ Duration of a user session (in minutes). After that time, a user coming back wil
 Elasticsearch REST API path. If you installed it on the same machine with the default port, use `http://localhost:9200`.
 
 
-### 4 - 
+### 4 - Launch the server
+
+(todo)
 
 
 ## TODO
@@ -108,6 +111,7 @@ Elasticsearch REST API path. If you installed it on the same machine with the de
  * Avoid browser compatibility errors and write a chapter in README about compatibility
  * Ignore search engines bots
  * Measure time in background ratio
+ * Give access to the UX score client-side, so the website can make some optimizations (example: remove ads when user has a bad user experience)
 
 
 ## Release History
