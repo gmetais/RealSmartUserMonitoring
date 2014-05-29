@@ -96,7 +96,7 @@ $(function () {
             text: 'First Page Load Time'
         },
         subtitle: {
-            text: 'Repartition of load time '
+            text: 'Average: ' + Math.round(window.rsumResults.generalMetrics.avgFirstPageLoadTime) + ' ms'
         },
         xAxis: {
             min: window.rsumResults.generalMetrics.minLoadTime,
@@ -134,10 +134,10 @@ $(function () {
             type: 'column'
         },
         title: {
-            text: 'Average Load Time'
+            text: 'All pages Load Time'
         },
         subtitle: {
-            text: 'Repartition of load time'
+            text: 'Average: ' + Math.round(window.rsumResults.generalMetrics.avgPageLoadTime) + ' ms'
         },
         xAxis: {
             min: window.rsumResults.generalMetrics.minLoadTime,
